@@ -1,10 +1,10 @@
-HOW TO USE:
+# HOW TO USE:
 
-SLAVE:
-create a c file to descript the device feature.
-example:
+_SLAVE:_
+_create a c file to descript the device feature._
 
-'''
+__example:__
+```c
 /* a reg for storage */
 /* this reg should be 16bytes align, using #pragma pack(push, 1)  #pragma pack(pop) to ensure*/
 static struct holding_reg hd_reg;
@@ -13,9 +13,9 @@ static struct holding_reg hd_reg;
 static int holding_reg_cb( mb_event_group_t event, mb_param_info_t * reg_info )
 {
 	if(event & MB_EVENT_HOLDING_REG_WR) {
-		'''
+		...
 	} else if (event & MB_EVENT_HOLDING_REG_RD){
-		'''
+		...
 	}
 }
 
@@ -32,13 +32,14 @@ static struct mb_slave_dev_desc hd_reg_desc = {
 
 /* registe the reg to the user_components layer */
 mb_slave_dev_register(&hd_reg_desc);
+```
 
 
+_MASTER:_
+_create a c file to descript the device feature._
 
-MASTER
-create a c file to descript the device feature.
-example:
-
+__example:__
+```c
 /* create a device description table */
 static struct mb_dev_desc th_dev_desc[] = {
 	{
@@ -63,7 +64,7 @@ int th_dev_cb (mb_parameter_descriptor_t * params, uint8_t * val, char * ack_par
 
 			break;
 		case TH_REG_H:
-
+	
 			break;
 		default:
 			ESP_LOGI(TAG, "no reg was found");
@@ -82,3 +83,4 @@ int th_dev_cb (mb_parameter_descriptor_t * params, uint8_t * val, char * ack_par
 
 /* registe the reg to the user_components layer */
 mb_master_dev_register(&th_dev_desc);
+```
