@@ -12,18 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <stdio.h>
+#include <inttypes.h>
+#include <string.h>
+#include <stdlib.h>
+
+#include <sys/queue.h>
+
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
 #include "freertos/task.h"
 #include "esp_system.h"
 #include "esp_log.h"
 
-#include <sys/queue.h>
-
-#include "string.h"
-#include "modbus_params.h"  // for modbus parameters structures
 #include "mbcontroller.h"
-#include "sdkconfig.h"
 
 #include "user_modbus.h"
 
@@ -45,6 +47,7 @@
 
 static const char * TAG = "user mb_master";
 
+/* this table is only for function mbc_master_set_descriptor() */
 mb_parameter_descriptor_t device_parameters[DEV_TBL_SZ];
 uint16_t num_device_parameters;
 
@@ -58,7 +61,7 @@ int mb_master_dev_register(struct mb_dev_desc * desc)
 		return -1;
 	}
 
-	/* 链入表 */
+	/* link to the table */
 	SLIST_INSERT_HEAD(&dev_head, desc, next);
 
 	mb_parameter_descriptor_t * p = &device_parameters[num_device_parameters];
@@ -68,7 +71,6 @@ int mb_master_dev_register(struct mb_dev_desc * desc)
 
 	ESP_LOGI(TAG, "cid: %d, %s", desc->params.cid, desc->params.param_key);
 
-	//dev_desc[num_device_parameters].cb = desc->cb;
 	num_device_parameters++;
 
 	return 0;

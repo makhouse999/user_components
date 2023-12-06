@@ -12,22 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <stdio.h>
+#include <inttypes.h>
+#include <string.h>
+#include <stdlib.h>
+
+#include <sys/queue.h>
+
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
 #include "freertos/task.h"
 #include "esp_system.h"
 #include "esp_log.h"
 
-#include <sys/queue.h>
-
-#include "string.h"
-#include "modbus_params.h"  // for modbus parameters structures
 #include "mbcontroller.h"
-#include "sdkconfig.h"
-
 #include "user_modbus.h"
-#include "modbus_slave_dev.h"
-#include "misc.h"
+
 
 #define MB_PORT_NUM     (CONFIG_MB_SLAVE_UART_PORT_NUM)   // Number of UART port used for Modbus connection
 #define MB_SLAVE_ADDR   (CONFIG_MB_SLAVE_ADDR)      // The address of device in Modbus network
@@ -45,30 +45,15 @@
                                                 | MB_EVENT_COILS_WR)
 #define MB_READ_WRITE_MASK                  (MB_READ_MASK | MB_WRITE_MASK)
 
-static const char *TAG = "user mb_slave";
-
-//#define REG_SZ	32
-//static struct mb_slave_dev_desc dev_desc[REG_SZ];
-//uint16_t num_reg = 0;
+static const char *TAG = "user_modbus_slave";
 
 SLIST_HEAD(dev_list, mb_slave_dev_desc);
 static struct dev_list dev_head = SLIST_HEAD_INITIALIZER(dev_head);
 
 int mb_slave_dev_register(struct mb_slave_dev_desc * desc)
 {
-#if 0
-	if(num_reg >= REG_SZ){
-		ESP_LOGE(TAG, "please extend reg_area[REG_SZ]");
-		return -1;
-	}
-#endif
-	/* 链入表 */
+	/* link to the table */
 	SLIST_INSERT_HEAD(&dev_head, desc, next);
-
-	//memcpy(&dev_desc[num_reg], desc, sizeof(dev_desc[num_reg]));
-
-	//num_reg++;
-
 	return 0;
 }
 
@@ -169,7 +154,7 @@ void modbus_slave_init(uint32_t baud, uint8_t addr)
     ESP_ERROR_CHECK(uart_set_mode(MB_PORT_NUM, UART_MODE_RS485_HALF_DUPLEX));
 
     ESP_LOGI(TAG, "Modbus slave stack initialized.");
-    ESP_LOGI(TAG, "Start modbus test...");
+    ESP_LOGI(TAG, "Start modbus slave...");
 	
 	xTaskCreate(slave_operation_func, "slave_operation_func", 40 * 1024, NULL, 5, NULL);
 }
