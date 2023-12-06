@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <sys/queue.h>
 
 enum nvs_dat_ty{
 	TY_STR,
@@ -19,6 +20,7 @@ struct nvs_user_zone {
 struct nvs_user_key {
 	struct nvs_user_zone * handle;
 	char name[32];
+	SLIST_ENTRY(nvs_user_key) next;
 };
 
 

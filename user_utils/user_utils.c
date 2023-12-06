@@ -1,4 +1,11 @@
-﻿#include "freertos/FreeRTOS.h"
+﻿#include <stdio.h>
+#include <inttypes.h>
+#include <string.h>
+#include <stdlib.h>
+
+#include <sys/time.h>
+
+#include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
 #include "esp_system.h"
@@ -6,28 +13,21 @@
 #include "nvs_flash.h"
 #include "esp_mac.h"
 
-#include "time.h"
-#include <sys/time.h>
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-
 #include "user_utils.h"
 
-static const char *TAG = "UTILS";
+static const char *TAG = "user_utils";
 
-/* 设置大类保存区 */
-static struct nvs_user_zone * str_hdl;
-static struct nvs_user_zone * blob_hdl;
+/* setup zones for differen types of var */
+static struct nvs_user_zone * str_hdl;		/* string typs vars */
+static struct nvs_user_zone * blob_hdl;		/* blob type vars */
 
-#define NVS_KEY_SZ	16
-static uint8_t nvs_user_key_num = 0;
-static struct nvs_user_key nvs_key[NVS_KEY_SZ]; 
+SLIST_HEAD(nvs_key_list, nvs_user_key);
+static struct nvs_key_list nvs_key_head = SLIST_HEAD_INITIALIZER(nvs_key_head);
 
 uint32_t get_time()
 {
 	struct timeval ts_now;
-    gettimeofday(&ts_now, NULL);
+	gettimeofday(&ts_now, NULL);
 	return (uint32_t)ts_now.tv_sec;
 }
 
@@ -62,29 +62,27 @@ char * get_nvs(char * key, void * pbuf, size_t * len)
 	nvs_handle_t handle;
 	char * str = NULL;
 	esp_err_t ret = ESP_OK;
-	uint8_t i;
 
-	for(i = 0;i < nvs_user_key_num;i++){
-		if(strcmp(nvs_key[i].name, key) == 0){
+	struct nvs_user_key * np = NULL;
+
+	SLIST_FOREACH(np, &nvs_key_head, next){
+		if(strcmp(np->name, key) == 0){
 			break;
 		}
 	}
 
-	if(i == nvs_user_key_num){
-		ESP_LOGE(TAG, "NO registe nvs key was found");
+	if(np == NULL){
 		return NULL;
 	}
 
-
-	if(nvs_open(nvs_key[i].handle->name, NVS_READONLY, &handle) != ESP_OK){
-		ESP_LOGE(TAG, "nvs_open %s fail", nvs_key[i].handle->name);
+	if(nvs_open(np->handle->name, NVS_READONLY, &handle) != ESP_OK){
+		ESP_LOGE(TAG, "nvs_open %s fail", np->handle->name);
 		return NULL;
 	}
 
-	/* 获取数据长度 */
-	if(nvs_key[i].handle->ty == TY_STR){
+	if(np->handle->ty == TY_STR){
 		ret = nvs_get_str(handle, key, NULL, len);
-	} else if(nvs_key[i].handle->ty == TY_BLOB){
+	} else if(np->handle->ty == TY_BLOB){
 		ret = nvs_get_blob(handle, key, NULL, len);
 	}
 
@@ -95,9 +93,9 @@ char * get_nvs(char * key, void * pbuf, size_t * len)
 
 	str = pbuf == NULL ? malloc(*len + 32) : pbuf;
 
-	if(nvs_key[i].handle->ty == TY_STR){
+	if(np->handle->ty == TY_STR){
 		ret = nvs_get_str(handle, key, str, len);
-	} else if(nvs_key[i].handle->ty == TY_BLOB) {
+	} else if(np->handle->ty == TY_BLOB) {
 		ret = nvs_get_blob(handle, key, str, len);
 	}
 
@@ -119,27 +117,27 @@ int set_nvs(char * key, void * pbuf, size_t len)
 {
 	nvs_handle_t handle;
 	esp_err_t ret;
-	uint8_t i;
 
-	for(i = 0;i < nvs_user_key_num;i++){
-		if(strcmp(nvs_key[i].name, key) == 0){
+	struct nvs_user_key * np = NULL;
+
+	SLIST_FOREACH(np, &nvs_key_head, next){
+		if(strcmp(np->name, key) == 0){
 			break;
 		}
 	}
 
-	if(i == nvs_user_key_num){
-		ESP_LOGE(TAG, "NO registe nvs key was found");
+	if(np == NULL){
 		return -1;
 	}
 
-	if((ret = nvs_open(nvs_key[i].handle->name, NVS_READWRITE, &handle)) != ESP_OK){
+	if((ret = nvs_open(np->handle->name, NVS_READWRITE, &handle)) != ESP_OK){
 		ESP_LOGE(TAG, "nvs_open error ret = 0x%x", ret);
 		return -1;
 	}
 
-	if(nvs_key[i].handle->ty == TY_STR){
+	if(np->handle->ty == TY_STR){
 		ret = nvs_set_str(handle, key, pbuf);
-	}else if(nvs_key[i].handle->ty == TY_BLOB){
+	}else if(np->handle->ty == TY_BLOB){
 		ret = nvs_set_blob(handle, key, pbuf, len);
 	}
 	ESP_ERROR_CHECK(ret);
@@ -153,20 +151,20 @@ int set_nvs(char * key, void * pbuf, size_t len)
 int clear_nvs(char * key)
 {
 	nvs_handle_t handle;
-	uint8_t i;
 
-	for(i = 0;i < nvs_user_key_num;i++){
-		if(strcmp(nvs_key[i].name, key) == 0){
+	struct nvs_user_key * np = NULL;
+
+	SLIST_FOREACH(np, &nvs_key_head, next){
+		if(strcmp(np->name, key) == 0){
 			break;
 		}
 	}
 
-	if(i == nvs_user_key_num){
-		ESP_LOGE(TAG, "NO registe nvs key was found");
+	if(np == NULL){
 		return -1;
 	}
 
-	if(nvs_open(nvs_key[i].handle->name, NVS_READWRITE, &handle) != ESP_OK){
+	if(nvs_open(np->handle->name, NVS_READWRITE, &handle) != ESP_OK){
 		return -1;
 	}
 
@@ -196,17 +194,22 @@ int create_nvs_key(const char * name, enum nvs_dat_ty ty)
 	if(name == NULL){
 		return -1;
 	}
-	strcpy(nvs_key[nvs_user_key_num].name, name);
+
+	struct nvs_user_key * np = malloc(sizeof(struct nvs_user_key));
+	strcpy(np->name, name);
 
 	if(ty == TY_STR){
-		nvs_key[nvs_user_key_num].handle = str_hdl;
+		np->handle = str_hdl;
 	}else if(ty == TY_BLOB){
-		nvs_key[nvs_user_key_num].handle = blob_hdl;
+		np->handle = blob_hdl;
 	}else{
+		free(np);
 		return -1;
 	}
 
-	nvs_user_key_num++;
+	/* link to the table */
+	SLIST_INSERT_HEAD(&nvs_key_head, np, next);
+
 	return 0;
 }
 
