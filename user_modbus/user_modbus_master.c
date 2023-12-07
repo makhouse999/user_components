@@ -46,10 +46,10 @@
 #define DEV_TBL_SZ		128		
 
 static const char * TAG = "user mb_master";
+static SemaphoreHandle_t rw_mutex;
 
-/* this table is only for function mbc_master_set_descriptor() */
-mb_parameter_descriptor_t device_parameters[DEV_TBL_SZ];
-uint16_t num_device_parameters;
+static mb_parameter_descriptor_t device_parameters[DEV_TBL_SZ];
+static uint16_t num_device_parameters;
 
 SLIST_HEAD(dev_list, mb_dev_desc);
 static struct dev_list dev_head = SLIST_HEAD_INITIALIZER(dev_head);
@@ -69,12 +69,49 @@ int mb_master_dev_register(struct mb_dev_desc * desc)
 	p->cid = num_device_parameters;
 	desc->params.cid = num_device_parameters;
 
-	ESP_LOGI(TAG, "cid: %d, %s", desc->params.cid, desc->params.param_key);
+	//ESP_LOGI(TAG, "%s, cid: %d, key: %s", __func__, desc->params.cid, desc->params.param_key);
 
 	num_device_parameters++;
 
 	return 0;
 
+}
+
+esp_err_t modbus_master_rw(enum mb_rw_mode mode, const char * param_key, uint8_t * val)
+{
+	esp_err_t err = ESP_OK;
+	struct mb_dev_desc * np = NULL;
+	mb_parameter_descriptor_t* param_descriptor = NULL;
+
+	uint8_t type = 0;
+
+	SLIST_FOREACH(np, &dev_head, next){
+		if(strcmp(np->params.param_key, param_key) == 0){
+			break;
+		}
+	}
+
+	if(np == NULL){
+		return ESP_FAIL;
+	}
+
+	param_descriptor = &np->params;
+
+	xSemaphoreTake(rw_mutex, portMAX_DELAY);
+
+	ESP_LOGI(TAG, "mbc_master_get_parameter() cid: %d, param_key: %s", param_descriptor->cid, param_descriptor->param_key);
+
+	if(mode == MB_MODE_READ){
+	    err = mbc_master_get_parameter(param_descriptor->cid, (char*)param_descriptor->param_key,
+			(uint8_t*)val, &type);
+	}else if(mode == MB_MODE_WRITE){
+        err = mbc_master_set_parameter(param_descriptor->cid, (char*)param_descriptor->param_key,
+			 (uint8_t*)val, &type);
+	}
+
+	xSemaphoreGive(rw_mutex);
+
+	return err;
 }
 
 // User operation function to read slave values and check alarm
@@ -85,7 +122,6 @@ static void master_operation_func(void *arg)
     mb_parameter_descriptor_t* param_descriptor = NULL;
 
 	uint8_t val[2048];
-	uint8_t type;
 	struct mb_dev_desc * np;
 
 	vTaskDelay(pdMS_TO_TICKS(3000));
@@ -104,13 +140,9 @@ static void master_operation_func(void *arg)
 				continue;
 			}
 
-			ESP_LOGI(TAG, "%s: , param_descriptor->cid : %d", __func__, param_descriptor->cid);			
-
-            type = 0;
             if (param_descriptor->param_type == PARAM_TYPE_ASCII) {
-               // Check for long array of registers of type PARAM_TYPE_ASCII
-                err = mbc_master_get_parameter(param_descriptor->cid, (char*)param_descriptor->param_key,
-                                                                        (uint8_t *)val, &type);
+				// Check for long array of registers of type PARAM_TYPE_ASCII
+				err = modbus_master_rw(MB_MODE_READ, (const char*)param_descriptor->param_key, (uint8_t *)val);
                 if (err == ESP_OK) {
                     ESP_LOGI(TAG, "Characteristic #%d %s (%s) value = (0x%08x) read successful.",
                                              param_descriptor->cid,
@@ -128,8 +160,7 @@ static void master_operation_func(void *arg)
                 }
 
             } else {
-                err = mbc_master_get_parameter(param_descriptor->cid, (char*)param_descriptor->param_key,
-                                                    (uint8_t*)val, &type);
+				err = modbus_master_rw(MB_MODE_READ, (const char*)param_descriptor->param_key, (uint8_t *)val);
 
                 if (err == ESP_OK) {
 					char ack_params_key[32] = {0};
@@ -147,8 +178,8 @@ static void master_operation_func(void *arg)
 
 						if(ack_np){
 							ESP_LOGI(TAG, "reply: cid = %d, key = %s", ack_np->params.cid, ack_np->params.param_key);
-                            err = mbc_master_set_parameter(ack_np->params.cid, (char*)ack_np->params.param_key,
-                                                              (uint8_t*)ack_val, &type);
+							err = modbus_master_rw(MB_MODE_WRITE, (const char*)param_descriptor->param_key, (uint8_t *)val);
+
                             if (err != ESP_OK) {
 								ESP_LOGE(TAG, "Characteristic, write failed.");
 							}							
@@ -230,7 +261,8 @@ void modbus_master_init()
     // Initialization of device peripheral and objects
 	/* 调用初始化前必须先注册所有设备描述符 */
     ESP_ERROR_CHECK(master_init());
-    vTaskDelay(pdMS_TO_TICKS(10));	
+    vTaskDelay(pdMS_TO_TICKS(10));
+	rw_mutex = xSemaphoreCreateMutex();	
 	xTaskCreate(master_operation_func, "master_operation_func", 40 * 1024, NULL, 5, NULL);
 }
 
