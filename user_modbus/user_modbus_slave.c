@@ -86,8 +86,8 @@ static void slave_operation_func(void *arg)
         (uint32_t)reg_info.size);
 
 		SLIST_FOREACH(np, &dev_head, next){
-			if(np->cb){
-				np->cb(event, &reg_info);
+			if(np->cb && np->cb(event, &reg_info) == 0){
+				break;
 			}
 		}
 
