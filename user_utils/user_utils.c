@@ -10,7 +10,10 @@
 #include "freertos/event_groups.h"
 #include "esp_system.h"
 #include "esp_log.h"
+
 #include "nvs_flash.h"
+#include "nvs.h"
+
 #include "esp_mac.h"
 
 #include "user_utils.h"
@@ -215,6 +218,23 @@ int create_nvs_key(const char * name, enum nvs_dat_ty ty)
 
 int user_utils_init()
 {
+#if 0
+	/* erase nvs infomation mannualy if needed */
+	ESP_ERROR_CHECK(nvs_flash_erase());
+#endif
+#if 1
+    /* Initialize NVS for storage */
+    esp_err_t ret = nvs_flash_init();
+    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+        /* NVS partition was truncated and needs to be erased
+         * Retry nvs_flash_init */
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        ESP_ERROR_CHECK(nvs_flash_init());
+    }
+	ESP_ERROR_CHECK( ret );
+#endif
+
+
 	str_hdl = create_nvs("user_str", TY_STR);
 	blob_hdl = create_nvs("user_blob", TY_BLOB);
 
