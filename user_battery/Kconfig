@@ -1,0 +1,35 @@
+menu "battery Configuration"
+
+    config BATTERY_ADC_CH
+        int "channel of the adc"
+        range 0 4 if IDF_TARGET_ESP32C3
+		default 0 if IDF_TARGET_ESP32C3
+		range 0 9 if IDF_TARGET_ESP32S3
+        default 0 if IDF_TARGET_ESP32S3
+        help
+            esp32c3 ch0 - ch4 ~ gpio0 - gpio4
+			esp32s3 ch0 - ch9 ~ gpio1 - gpio10
+	
+	config BATTERY_ADC_ATTEN
+		int "atten(db) of the adc"
+		default 3
+		help
+			0: ADC_ATTEN_DB_0		0 mV ~ 950 mV(esp32s3)	0 mV ~ 750 mV(esp32c3).
+			1: ADC_ATTEN_DB_2_5		0 mV ~ 1250 mV(esp32s3)	0 mV ~ 1050 mV(esp32c3).
+			2: ADC_ATTEN_DB_6		0 mV ~ 1750 mV(esp32s3)	0 mV ~ 1300 mV(esp32c3).
+			3: ADC_ATTEN_DB_12		0 mV ~ 3100 mV(esp32s3)	0 mV ~ 2500 mV(esp32c3).
+			ADC_ATTEN_DB_11 means the same as ADC_ATTEN_DB_12.
+
+	config BATTERY_ADC_CALI_SCHEME
+		int "calibration scheme"
+		default 1 if IDF_TARGET_ESP32C3
+		default 3 if IDF_TARGET_ESP32S3
+		help
+			constant value
+
+	config BATTERY_ADC_VOLTAGE_DIV
+		int "voltage division by resistance"
+		default 2
+		help
+			real voltage = adc_voltage * div
+endmenu

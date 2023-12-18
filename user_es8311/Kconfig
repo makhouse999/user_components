@@ -1,0 +1,113 @@
+menu "es8311 Configuration"
+
+	config ES8311_I2C_PORT
+		hex "I2C port of ES8311"
+		default 0
+		help
+			0 / 1
+
+	config ES8311_I2C_ADDR
+		hex "I2C address of ES8311"
+		default 0x18
+		help
+			ES8311 address: CE pin low - 0x18, CE pin high - 0x19
+
+    config ES8311_I2C_MASTER_SCL
+        int "SCL GPIO Number"
+        default 5 if IDF_TARGET_ESP8266
+        default 6 if IDF_TARGET_ESP32C3
+        default 19 if IDF_TARGET_ESP32 || IDF_TARGET_ESP32S2 || IDF_TARGET_ESP32S3
+        help
+            GPIO number for I2C Master clock line.
+
+    config ES8311_I2C_MASTER_SDA
+        int "SDA GPIO Number"
+        default 4 if IDF_TARGET_ESP8266
+        default 5 if IDF_TARGET_ESP32C3
+        default 18 if IDF_TARGET_ESP32 || IDF_TARGET_ESP32S2 || IDF_TARGET_ESP32S3
+        help
+            GPIO number for I2C Master data line.
+
+
+	config ES8311_I2S_PORT
+		hex "I2S port of ES8311"
+		default 0
+		help
+			0 / 1
+
+	config ES8311_I2S_MCK
+		int "MCK GPIO Number"
+		default 5
+		help
+			GPIO number for I2S MCK.
+
+	config ES8311_I2S_BCK
+		int "BCK GPIO Number"
+		default 16
+		help
+			GPIO number for I2S BCK.
+
+	config ES8311_I2S_WS
+		int "WS GPIO Number"
+		default 7
+		help
+			GPIO number for I2S WS.
+
+	config ES8311_I2S_DO
+		int "DO GPIO Number"
+		default 6
+		help
+			GPIO number for I2S DO.
+
+	config ES8311_I2S_DI
+		int "DI GPIO Number"
+		default -1
+		help
+			GPIO number for I2S DI.
+
+
+
+    choice ES8311_SELECT_MIC_GAIN
+        prompt "Set MIC gain"
+        depends on EXAMPLE_MODE_ECHO
+        default MIC_GAIN_18DB
+        help
+            Select mic gain for echo mode
+
+        config MIC_GAIN_0DB
+            bool "0dB"
+        config MIC_GAIN_6DB
+            bool "6dB"
+        config MIC_GAIN_12DB
+            bool "12dB"
+        config MIC_GAIN_18DB
+            bool "18dB"
+        config MIC_GAIN_24DB
+            bool "24dB"
+        config MIC_GAIN_30DB
+            bool "30dB"
+        config MIC_GAIN_36DB
+            bool "36dB"
+        config MIC_GAIN_42DB
+            bool "42dB"
+    endchoice
+
+    config ES8311_MIC_GAIN
+        int
+        default 0 if MIC_GAIN_0DB
+        default 1 if MIC_GAIN_6DB
+        default 2 if MIC_GAIN_12DB
+        default 3 if MIC_GAIN_18DB
+        default 4 if MIC_GAIN_24DB
+        default 5 if MIC_GAIN_30DB
+        default 6 if MIC_GAIN_36DB
+        default 7 if MIC_GAIN_42DB
+
+    config ES8311_VOICE_VOLUME
+        int "Voice volume"
+        range 0 100
+        default 60
+        help
+            Set voice volume
+
+endmenu
