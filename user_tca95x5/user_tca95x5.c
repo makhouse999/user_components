@@ -33,7 +33,7 @@ uint16_t tca95x5_get_val()
 		return 0;
     }
 
-    ESP_LOGI(TAG, "TCA9555 port value: 0x%04x", val);
+    //ESP_LOGI(TAG, "TCA9555 port value: 0x%04x", val);
 	
 	return val;	
 }
