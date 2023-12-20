@@ -22,6 +22,7 @@
 #define BATTERY_ADC_VOLTAGE_DIV		CONFIG_BATTERY_ADC_VOLTAGE_DIV
 
 #define BATTERY_VOLTAGE_MAX			4100	/* mV */
+#define BATTERY_VOLTAGE_MIN			3600	/* mV */
 
 static esp_adc_cal_characteristics_t bsp_adc_chars;
 
@@ -57,10 +58,7 @@ int battery_get_voltage(void)
 /* unit: % */
 int battery_get_percentage(void)
 {
-    int voltage, adc_raw;
+	int vol = (int)(((float)(battery_get_voltage() - BATTERY_VOLTAGE_MIN) * 100 / (BATTERY_VOLTAGE_MAX - BATTERY_VOLTAGE_MIN)));
+	return vol > 100 ? 100 : vol;
 
-    adc_raw = adc1_get_raw(BATTERY_ADC_CH);
-    voltage = esp_adc_cal_raw_to_voltage(adc_raw, &bsp_adc_chars);
-	voltage *=	BATTERY_ADC_VOLTAGE_DIV;
-	return (int)((float)voltage / BATTERY_VOLTAGE_MAX * 100);
 }
