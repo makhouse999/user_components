@@ -59,6 +59,8 @@ int battery_get_voltage(void)
 int battery_get_percentage(void)
 {
 	int vol = (int)(((float)(battery_get_voltage() - BATTERY_VOLTAGE_MIN) * 100 / (BATTERY_VOLTAGE_MAX - BATTERY_VOLTAGE_MIN)));
-	return vol > 100 ? 100 : vol;
+	vol = vol > 100 ? 100 : vol;
+	vol = vol < 0 ? 0 : vol;
+	return vol;
 
 }
