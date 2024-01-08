@@ -22,6 +22,17 @@
 static const char *TAG = "user_tca95x5";
 static i2c_dev_t tca9555 = { 0 };
 
+/* 
+	P17 ... P10 P07 ... P00  
+	pin: 15 ... 8 7 ... 0
+	val: 0 / 1
+*/
+
+int tca95x5_set_val(uint8_t pin, uint32_t val)
+{
+	return (int)tca95x5_set_level(&tca9555, pin, val);
+}
+
 uint16_t tca95x5_get_val()
 {
 	uint16_t val;

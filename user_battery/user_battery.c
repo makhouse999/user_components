@@ -22,7 +22,7 @@
 #define BATTERY_ADC_VOLTAGE_DIV		CONFIG_BATTERY_ADC_VOLTAGE_DIV
 
 #define BATTERY_VOLTAGE_MAX			4100	/* mV */
-#define BATTERY_VOLTAGE_MIN			3600	/* mV */
+#define BATTERY_VOLTAGE_MIN			3550	/* mV */
 
 static esp_adc_cal_characteristics_t bsp_adc_chars;
 
