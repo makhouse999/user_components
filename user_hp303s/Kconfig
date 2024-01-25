@@ -1,0 +1,39 @@
+menu "hp303s config"
+	config 74HC138_A0_GPIO
+        int "74HC138 A0 GPIO number"
+        default 10
+        help
+            GPIO number connected to A0 pin
+
+	config 74HC138_A1_GPIO
+		int "74HC138 A1 GPIO number"
+		default 9
+		help
+			GPIO number connected to A1 pin
+
+	config 74HC138_A2_GPIO
+		int "74HC138 A2 GPIO number"
+		default 14
+		help
+			GPIO number connected to A2 pin
+
+	config HP303S_MOSI_GPIO
+		int "HP303S MOSI GPIO number"
+		default 11
+		help
+			GPIO number connected to HP303S MISO pin
+
+	config HP303S_MISO_GPIO
+		int "HP303S MISO GPIO number"
+		default 13
+		help
+			GPIO number connected to HP303S MOSI pin
+
+	config HP303S_CLK_GPIO
+		int "HP303S CLK GPIO number"
+		default 12
+		help
+			GPIO number connected to HP303S CLK pin
+
+	
+endmenu

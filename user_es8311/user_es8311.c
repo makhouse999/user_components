@@ -46,10 +46,11 @@ static SemaphoreHandle_t rw_mutex;
 
 SLIST_HEAD(track_list, track_params);
 static struct track_list track_head = SLIST_HEAD_INITIALIZER(track_head);
+static es8311_handle_t es_handle;
 
 static esp_err_t es8311_codec_init(void)
 {
-#if 0
+#if 1
     /* Initialize I2C peripheral */
     i2c_config_t es_i2c_cfg = {
         .sda_io_num = ES8311_I2C_MASTER_SDA,
@@ -63,7 +64,7 @@ static esp_err_t es8311_codec_init(void)
     ESP_RETURN_ON_ERROR(i2c_driver_install(ES8311_I2C_PORT, I2C_MODE_MASTER,  0, 0, 0), TAG, "install i2c driver failed");
 #endif
     /* Initialize es8311 codec */
-    es8311_handle_t es_handle = es8311_create(ES8311_I2C_PORT, ES8311_I2C_ADDR);
+    es_handle = es8311_create(ES8311_I2C_PORT, ES8311_I2C_ADDR);
     ESP_RETURN_ON_FALSE(es_handle, ESP_FAIL, TAG, "es8311 create failed");
     es8311_clock_config_t es_clk = {
         .mclk_inverted = false,
@@ -156,9 +157,10 @@ EXIT:
 	vTaskDelete(NULL);
 }
 
-int es8311_play(char * name)
+int es8311_play(char * name, int vol)
 {
 	struct track_params * np = NULL;
+	static int pre_vol = 0;
 
 	SLIST_FOREACH(np, &track_head, next){
 		if(strcmp(np->name, name) == 0){
@@ -170,6 +172,10 @@ int es8311_play(char * name)
 		return -1;
 	}
 
+	if(pre_vol != vol){
+		es8311_voice_volume_set(es_handle, vol, NULL);
+		pre_vol = vol;
+	}
 	xTaskCreate(es8311_play_thread, "es8311_play_thread", 50 * 1024, np, 4, NULL);
 
 	return 0;
@@ -195,5 +201,11 @@ int user_es8311_init(struct es8311_dev_desc * desc)
 		SLIST_INSERT_HEAD(&track_head, &desc->track_handle[i], next);
 	}
 
+	return 0;
+}
+
+int user_es8311_volume_set(int vol)
+{
+	es8311_voice_volume_set(es_handle, vol, NULL);
 	return 0;
 }

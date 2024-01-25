@@ -22,7 +22,8 @@
 #define YEAR_BASE (2000) //date in GPS starts from 2000
 
 static const char *TAG = "user_nmea";
-static gps_t gps;
+static struct user_nmea_info nmea_info;
+
 /**
  * @brief GPS Event Handler
  *
@@ -35,7 +36,8 @@ static void gps_event_handler(void *event_handler_arg, esp_event_base_t event_ba
 {
     switch (event_id) {
     case GPS_UPDATE:
-        memcpy(&gps, event_data, sizeof(gps_t));
+        memcpy(&nmea_info.gps, event_data, sizeof(gps_t));
+		gps_t * gps = &nmea_info.gps;
 
         /* print information parsed from GPS statements */
         ESP_LOGD(TAG, "%d/%d/%d %d:%d:%d => \r\n"
@@ -43,9 +45,9 @@ static void gps_event_handler(void *event_handler_arg, esp_event_base_t event_ba
                  "\t\t\t\t\t\tlongitude = %.05f°E\r\n"
                  "\t\t\t\t\t\taltitude   = %.02fm\r\n"
                  "\t\t\t\t\t\tspeed      = %fm/s",
-                 gps.date.year + YEAR_BASE, gps.date.month, gps.date.day,
-                 gps.tim.hour + TIME_ZONE, gps.tim.minute, gps.tim.second,
-                 gps.latitude, gps.longitude, gps.altitude, gps.speed);
+                 gps->date.year + YEAR_BASE, gps->date.month, gps->date.day,
+                 gps->tim.hour + TIME_ZONE, gps->tim.minute, gps->tim.second,
+                 gps->latitude, gps->longitude, gps->altitude, gps->speed);
         break;
     case GPS_UNKNOWN:
         /* print unknown statements */
@@ -56,9 +58,9 @@ static void gps_event_handler(void *event_handler_arg, esp_event_base_t event_ba
     }
 }
 
-gps_t * nmea_get_gps()
+struct user_nmea_info * user_nmea_get_info()
 {
-	return &gps;
+	return &nmea_info;
 }
 
 int nmea_init()

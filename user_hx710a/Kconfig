@@ -1,0 +1,25 @@
+menu "hx710a configuration"
+
+    config HX710A_PD_SCK_GPIO
+        int "PD/SCK GPIO number"
+        default 4 if IDF_TARGET_ESP8266 || IDF_TARGET_ESP32C3
+        default 1 if IDF_TARGET_ESP32 || IDF_TARGET_ESP32S2 || IDF_TARGET_ESP32S3
+        help
+            GPIO number connected to PD/SCK pin
+
+    config HX710A_DOUT_GPIO
+        int "DOUT GPIO number"
+        default 5 if IDF_TARGET_ESP8266 || IDF_TARGET_ESP32C3
+        default 2 if IDF_TARGET_ESP32 || IDF_TARGET_ESP32S2 || IDF_TARGET_ESP32S3
+        help
+            GPIO number connected to DOUT pin
+
+    config HX710A_AVG_TIMES
+        int "Samples to average"
+        default 5
+
+	config HX710A_RES
+		int "raw / kg"
+		default 6710
+		#default 167772
+endmenu

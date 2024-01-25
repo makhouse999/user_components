@@ -22,7 +22,8 @@ struct es8311_dev_desc {
 };
 
 
-int es8311_play(char * name);
+int es8311_play(char * name, int vol);
+int user_es8311_volume_set(int vol);
 int user_es8311_init(struct es8311_dev_desc * desc);
 
 #endif

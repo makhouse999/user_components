@@ -1,0 +1,4 @@
+dependencies:
+  json_parser:
+    version: "1.0.3"
+
