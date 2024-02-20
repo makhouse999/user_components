@@ -79,8 +79,9 @@ static void event_handler(void* arg, esp_event_base_t event_base,
     }
 }
 
-void wifi_init_sta(void)
+int wifi_init_sta(void)
 {
+	int ret = 0;
     s_wifi_event_group = xEventGroupCreate();
 
     ESP_ERROR_CHECK(esp_netif_init());
@@ -137,14 +138,18 @@ void wifi_init_sta(void)
     } else if (bits & WIFI_FAIL_BIT) {
         ESP_LOGI(TAG, "Failed to connect to SSID:%s, password:%s",
                  ESP_WIFI_SSID, ESP_WIFI_PASS);
+		ret = -1;
     } else {
         ESP_LOGE(TAG, "UNEXPECTED EVENT");
+		ret = -1;
     }
 
     /* The event will not be processed after unregister */
     ESP_ERROR_CHECK(esp_event_handler_instance_unregister(IP_EVENT, IP_EVENT_STA_GOT_IP, instance_got_ip));
     ESP_ERROR_CHECK(esp_event_handler_instance_unregister(WIFI_EVENT, ESP_EVENT_ANY_ID, instance_any_id));
     vEventGroupDelete(s_wifi_event_group);
+
+	return ret;
 }
 
 
@@ -215,12 +220,13 @@ int user_wifi_sta_get_rssi()
 }
 
 
-void user_wifi_init(wifi_mode_t mode)
+int user_wifi_init(wifi_mode_t mode)
 {
+	int ret = 0;
 	if(mode == WIFI_MODE_STA){
-		wifi_init_sta();
+		ret = wifi_init_sta();
 	}else if(mode == WIFI_MODE_AP){
 		wifi_init_softap();
 	}
-	
+	return ret;
 }

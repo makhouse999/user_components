@@ -9,7 +9,7 @@
 
 #include "esp_wifi.h"
 
-void user_wifi_init(wifi_mode_t mode);
+int user_wifi_init(wifi_mode_t mode);
 esp_netif_t * user_wifi_get_netif(void);
 int user_wifi_sta_get_rssi(void);
 #endif
