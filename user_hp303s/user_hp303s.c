@@ -464,7 +464,7 @@ static void hp303s_sample(void *pvParameters)
 		Hp303s_info.temp = temp_avg;
 		Hp303s_info.alt = hp303s_calc_altitude(Hp303s_info.psr, Hp303s_info.temp);
 
-		vTaskDelay(pdMS_TO_TICKS(5000));		
+		vTaskDelay(pdMS_TO_TICKS(5000));
 	}
 
 
@@ -495,15 +495,15 @@ void hp303s_init()
 	hp303s_read_id();
 	
 	pm_rate = 3;		/* 8 measurements per sec */
-	pm_prc = 6;			/* 64 times */
+	pm_prc = 4;			/* 4:16 tims, 6:64 times */
 	kp = k_val[pm_prc];
 	
 	tmp_rate = 3;		/* 8 measurements per sec */
-	tmp_prc = 0;		/* 1 time */
+	tmp_prc = 2;		/* 0: 1 time 2: 4 times*/
 	kt = k_val[tmp_prc];
 	
 	uint8_t tmp_sta;
-#if 1	
+
 	for(enum hp303s_id i = ID_0;i < ID_MAX;i++){
 		hp303s_wr_byte(i, HP303S_REG_RESET | HP303S_REG_WR, 0x09);
 
@@ -527,13 +527,14 @@ void hp303s_init()
 //		hp303s_wr_byte(i, HP303S_REG_CFG | HP303S_REG_WR, 0x0c);
 		hp303s_wr_byte(i, HP303S_REG_CFG | HP303S_REG_WR, 0x04);
 		
-#if 1
+#if 0
 		/* 温度补偿源设置 */
 		hp303s_wr_byte(i, HP303S_REG_TMP_COEF_SRCE | HP303S_REG_WR, (1 << 7));
-#endif
+
 		
 		/* 配置为停止模式reg0x08 */
 		hp303s_wr_byte(i, HP303S_REG_MEAS_CFG | HP303S_REG_WR, 0x00);
+#endif
 
 		/* 获取补偿系数 */
 		hp303s_get_coef(i);		
@@ -543,37 +544,16 @@ void hp303s_init()
 	hp303s_selfcheck();
 
 	xTaskCreate(hp303s_sample, "hp303s", 4096, NULL, 5, NULL);
-#endif
+
 }
 
 float hp303s_calc_altitude(float psr, float temp)
 {
+	float h; /* height, unit: m */
+	h = 44330.76923 * (1-pow((psr/101325),0.190391633));
 	
-    float R = 8.314; // gas constant in J/(mol*K)
-    float T = temp + 273.15; // temperature in Kelvin
-    float g = 9.81; // acceleration due to gravity in m/s^2
-    float P0 = 101325; // standard atmospheric pressure in Pa
-    float P = psr; // atmospheric pressure at the given height
-    float h; // height
-
-#if 0
-    // Input temperature in Celsius
-    double tempCelsius;
-    printf("Enter temperature in Celsius: ");
-    scanf("%lf", &tempCelsius);
-
-    // Convert temperature to Kelvin
-    T = tempCelsius + 273.15;
-
-    // Input atmospheric pressure at the given height
-    printf("Enter atmospheric pressure at the given height in Pa: ");
-    scanf("%lf", &P);
-#endif
-    // Calculate height using the formula
-    h = (R * T / g) * log(P0 / P);
-
     // Output the result
-    printf("The height is: %.2f meters\n", h);
+    //ESP_LOGI("The height is: %.2f meters\n", h);
 
 	return h;
 }

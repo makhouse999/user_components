@@ -23,7 +23,7 @@
 struct hp303s_info {
 	float psr;
 	float temp;
-	float alt;
+	float alt;	/* unit m */
 };
 
 enum hp303s_id{
@@ -42,7 +42,7 @@ enum hp303s_id{
 struct hp303s_params {
 	enum hp303s_id id;
 	
-	int16_t		c0, c1, c01, c11, c20, c21, c30;
+	int32_t		c0, c1, c01, c11, c20, c21, c30;
 	int32_t		c00, c10;
 	
 	float temp;
