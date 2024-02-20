@@ -35,6 +35,8 @@ static const uint32_t drv8833_mcpwm_freq = 5000;
 // Feeling adventurous? Nominal 2S LiPo is 7.4V. 7.4/8.4 ~= 88%
 static const uint32_t duty_cycle_max = 100;
 
+static const char * TAG = "user_drv883x";
+
 static void mcpwm_example_gpio_initialize(void)
 {
     printf("initializing mcpwm gpio...\n");
@@ -46,8 +48,6 @@ static void mcpwm_example_gpio_initialize(void)
 
 void set_channel(bool bBrake, int32_t iSpeed, mcpwm_timer_t timer)
 {
-    printf("speed %d\n", iSpeed);
-
     if (bBrake)
     {
         mcpwm_set_duty(drv8833_mcpwm_unit, timer, MCPWM_GEN_A, 100);
@@ -115,6 +115,7 @@ static void motor_drv8833_task(void *arg)
 int drv8833_set_speed(int motor, int32_t spd)
 {
 	mcpwm_timer_t timer = motor == 0 ? MCPWM_TIMER_0 : MCPWM_TIMER_1;
+	ESP_LOGI(TAG, "motor: %d, speed %d", motor, spd);
 	set_channel(false, spd, timer);
 	return 0;
 }
