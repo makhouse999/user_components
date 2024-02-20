@@ -32,4 +32,16 @@ menu "battery Configuration"
 		default 2
 		help
 			real voltage = adc_voltage * div
+
+	config BATTERY_VOLTAGE_MIN
+		int "minimum voltage of the battery"
+		default 3400
+		help
+			unit: mv
+
+	config BATTERY_VOLTAGE_MAX
+		int "maximum voltage of the battery"
+		default 4100
+		help
+			unit: mv
 endmenu
