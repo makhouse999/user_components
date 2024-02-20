@@ -1,5 +1,11 @@
 menu "es8311 Configuration"
 
+	config ES8311_I2C_INIT_FG
+		bool "i2c init en"
+		default y
+		help
+			ES8311 i2c ll init en flag
+
 	config ES8311_I2C_PORT
 		hex "I2C port of ES8311"
 		default 0

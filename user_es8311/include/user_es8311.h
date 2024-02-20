@@ -12,6 +12,7 @@ struct track_params {
 	const uint8_t * pcm_start;
 	const uint8_t * pcm_end;
 	uint8_t blk_fg;
+	const uint16_t dly;
 
 	SLIST_ENTRY(track_params) next;
 };

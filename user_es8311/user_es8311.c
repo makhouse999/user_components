@@ -18,6 +18,8 @@
 #include "es8311.h"
 #include "user_es8311.h"
 
+#define ES8311_I2C_INIT_FG			CONFIG_ES8311_I2C_INIT_FG
+
 #define ES8311_I2C_PORT				CONFIG_ES8311_I2C_PORT
 #define ES8311_I2C_ADDR				CONFIG_ES8311_I2C_ADDR
 #define ES8311_I2C_MASTER_SDA		CONFIG_ES8311_I2C_MASTER_SDA
@@ -50,7 +52,7 @@ static es8311_handle_t es_handle;
 
 static esp_err_t es8311_codec_init(void)
 {
-#if 1
+#if ES8311_I2C_INIT_FG
     /* Initialize I2C peripheral */
     i2c_config_t es_i2c_cfg = {
         .sda_io_num = ES8311_I2C_MASTER_SDA,
@@ -151,6 +153,12 @@ static void es8311_play_thread(void *pvParameters)
     } else {
         ESP_LOGE(TAG, "[music] i2s music play falied.");
     }
+
+	/* delay when finish */
+	if(np->dly){
+		vTaskDelay(pdMS_TO_TICKS(np->dly));
+	}
+
 EXIT:
 	xSemaphoreGive(rw_mutex);
 
@@ -160,7 +168,7 @@ EXIT:
 int es8311_play(char * name, int vol)
 {
 	struct track_params * np = NULL;
-	static int pre_vol = 0;
+	static int pre_vol = 0xff;
 
 	SLIST_FOREACH(np, &track_head, next){
 		if(strcmp(np->name, name) == 0){
