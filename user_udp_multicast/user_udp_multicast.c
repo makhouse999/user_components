@@ -47,7 +47,7 @@ static const char *V4TAG = "mcast-ipv4";
 static const char *V6TAG = "mcast-ipv6";
 #endif
 
-#define RXBUF_SZ	1024
+#define RXBUF_SZ	2048
 
 static int sock;
 static QueueHandle_t rx_queue;
@@ -572,7 +572,7 @@ int user_udp_multicast_send(char * pbuf, int len)
 int user_udp_multicast_init()
 {
 	rx_queue = xQueueCreate(20, RXBUF_SZ);
-	xTaskCreate(&mcast_task, "mcast_task", 4096, NULL, 5, NULL);
+	xTaskCreate(&mcast_task, "mcast_task", 16384, NULL, 5, NULL);
 	
 	return 0;
 }
